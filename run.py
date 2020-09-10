@@ -1,17 +1,28 @@
 import asyncio
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from itertools import groupby
 
 import aiohttp
 
 from call_list import get_calls, login
-from sanic import Blueprint, Sanic, response
+from filters import filter_day, filter_time
+from sanic import Sanic, response
 from sanic_jinja2 import SanicJinja2
 
 app = Sanic(__name__)
 jinja = SanicJinja2(app)
+jinja.add_env("day", filter_day, "filters")
+jinja.add_env("time", filter_time, "filters")
 call_list = []
 last_updated = datetime.now()
 session = None
+
+
+def group_calls(calls):
+    ret = []
+    for k, g in groupby(calls, key=lambda x: x.date.date()):
+        ret.append((k, [*g]))
+    return sorted(ret, reverse=True, key=lambda x: x[0])
 
 
 @app.route("/calls", methods=["POST", "GET"])
@@ -20,7 +31,7 @@ async def calls(request):
     global session, last_updated, call_list
     if request.method == "POST":
         print("Is POST")
-        call_list = await get_calls(session)
+        call_list = group_calls(await get_calls(session))
         last_updated = datetime.now()
     return {
         "last_updated": last_updated.strftime('%H:%M'),
@@ -35,7 +46,7 @@ async def update_calls():
     await login(session)
     while True:
         print("Updating calls...")
-        call_list = await get_calls(session)
+        call_list = group_calls(await get_calls(session))
         print("updated calls!")
         last_updated = datetime.now()
         await asyncio.sleep(600)

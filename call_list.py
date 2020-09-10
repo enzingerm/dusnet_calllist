@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from lxml import html
 
 from config import PASS, USER
@@ -5,6 +7,18 @@ from config import PASS, USER
 LOGIN_URL = "https://www.dus.net/de/"
 CALLER_LIST = "https://www.dus.net/de/kundenmenue/kundencenter/callerlist.html"
 CUSTOMER_CENTER = "https://www.dus.net/de/kundenmenue/kundencenter/index.html"
+
+
+class Call:
+    def __init__(self, kind, date, number, duration=None):
+        self.kind = kind
+        self.date = date
+        self.number = number
+        self.duration = duration
+
+    @classmethod
+    def create(cls, kind, date_string, number, duration=None):
+        return cls(kind, datetime.strptime(date_string.strip(), "%d.%m.%Y %H:%M:%S"), number, duration)
 
 
 async def login(session):
@@ -31,11 +45,11 @@ async def get_calls(session):
         parsed = html.fromstring((await response.text()).encode())
         for i in parsed.xpath("//div[text()='verpasste Anrufe']/following-sibling::table/tr[position()>1]"):
             datum, nummer = i.xpath("td/text()")
-            calls.append(('eingehend', datum, nummer, None))
+            calls.append(Call.create('eingehend', datum, nummer, None))
         for i in parsed.xpath("//div[text()='getätigte Anrufe']/following-sibling::table/tr[position()>1]"):
             datum, nummer, dauer = i.xpath("td/text()")
-            calls.append(('ausgehend', datum, nummer, dauer))
+            calls.append(Call.create('ausgehend', datum, nummer, dauer))
         for i in parsed.xpath("//div[text()='angenommene Anrufe']/following-sibling::table/tr[position()>1]"):
             datum, nummer, dauer = i.xpath("td/text()")
-            calls.append(('eingehend', datum, nummer, dauer))
-    return sorted(calls, reverse=True, key=lambda x: x[1])
+            calls.append(Call.create('eingehend', datum, nummer, dauer))
+    return sorted(calls, reverse=True, key=lambda x: x.date)

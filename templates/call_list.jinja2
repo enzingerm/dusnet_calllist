@@ -2,20 +2,53 @@
 <html lang="de">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}{% endblock %}</title>
+    <title>Anrufliste</title>
+    <meta meta name="viewport" content=  
+            "width=device-width, user-scalable=no" /> 
     {% if not disable_reload %}
     <script type="text/javascript">
-        setTimeout("window.location.href = window.location.href;", 5000);
+        setTimeout("window.location.href = window.location.href;", 10000);
     </script>
     {% endif %}
     <style type="text/css">
         table {
             width:100%;
+            font-family: sans-serif;
+        }
+        thead  {
+            background-color: salmon;
+        }
+        tr.call > td {
+            font-color: gray;
+            font-size: 1em;
+        }
+        tr.call.verpasst {
+            color: FireBrick;
+        }
+        tr.call td:first-child::before {
+            font-weight: bold;
+            font-size:1.3em;
+        }
+        tr.call.verpasst td:first-child::before {
+            content: "←";
+            color:red;
+        }
+        tr.call.eingehend td:first-child::before {
+            content: "←";
+            color:green;
+        }
+        tr.call.ausgehend td:first-child::before {
+            content: "→";
+            color:green;
+        }
+        tr.dayhead > td {
+            font-size:0.8em;
+            background-color: lightblue;
         }
     </style>
 </head>
 <body>
-    <table>
+    <table cellspacing=0 cellpadding=2>
         <thead>
             <tr>
                 <th colspan=2><h2>Anrufliste</h2></th>
@@ -23,20 +56,25 @@
                 <th><form method="POST"><button type="submit">Neu laden</button></form></th>
             </tr>
             <tr>
-                <th>Datum</th>
+                <th></th>
+                <th>Uhrzeit</th>
                 <th>Rufnummer</th>
-                <th>Art</th>
                 <th>Dauer</th>
             </tr>
         </thead>
         <tbody>
-            {% for kind, date, nr, duration in calls %}
-                <tr>
-                    <td>{{ date }}</td>
-                    <td>{{ nr }}</td>
-                    <td>{% if duration is none %}verpasst{% else %}{{ kind }}{% endif %}</td>
-                    <td>{{ duration or '' }}</td>
+            {% for day, day_calls in calls %}
+                <tr class="dayhead">
+                    <td colspan=4>{{ day|day }}</td>
                 </tr>
+                {% for call in day_calls %}
+                <tr class="call {% if call.duration is none %}verpasst{% else %}{{ call.kind }}{% endif %}">
+                    <td title="{% if call.duration is none %}verpasst{% else %}{{ call.kind }}{% endif %}"></td>
+                    <td>{{ call.date|time }}</td>
+                    <td>{{ call.number }}</td>
+                    <td>{{ call.duration or '' }}</td>
+                </tr>
+                {% endfor %}
             {% endfor %}
         </tbody>
     </table>
