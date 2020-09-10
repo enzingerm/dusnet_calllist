@@ -1,0 +1,22 @@
+<h2>Anrufliste (zuletzt aktualisiert: {{ last_updated }})</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Datum</th>
+            <th>Rufnummer</th>
+            <th>Art</th>
+            <th>Dauer</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for kind, date, nr, duration in calls %}
+            <tr>
+                <td>{{ date }}</td>
+                <td>{{ nr }}</td>
+                <td>{% if duration is none %}verpasst{% else %}{{ kind }}{% endif %}</td>
+                <td>{{ duration or '' }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
