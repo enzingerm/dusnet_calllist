@@ -1,22 +1,44 @@
-<h2>Anrufliste (zuletzt aktualisiert: {{ last_updated }})</h2>
-
-<table>
-    <thead>
-        <tr>
-            <th>Datum</th>
-            <th>Rufnummer</th>
-            <th>Art</th>
-            <th>Dauer</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for kind, date, nr, duration in calls %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+    {% if not disable_reload %}
+    <script type="text/javascript">
+        setTimeout("window.location.href = window.location.href;", 5000);
+    </script>
+    {% endif %}
+    <style type="text/css">
+        table {
+            width:100%;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
             <tr>
-                <td>{{ date }}</td>
-                <td>{{ nr }}</td>
-                <td>{% if duration is none %}verpasst{% else %}{{ kind }}{% endif %}</td>
-                <td>{{ duration or '' }}</td>
+                <th colspan=2><h2>Anrufliste</h2></th>
+                <th>aktualisiert: {{ last_updated }}</th>
+                <th><form method="POST"><button type="submit">Neu laden</button></form></th>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            <tr>
+                <th>Datum</th>
+                <th>Rufnummer</th>
+                <th>Art</th>
+                <th>Dauer</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kind, date, nr, duration in calls %}
+                <tr>
+                    <td>{{ date }}</td>
+                    <td>{{ nr }}</td>
+                    <td>{% if duration is none %}verpasst{% else %}{{ kind }}{% endif %}</td>
+                    <td>{{ duration or '' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

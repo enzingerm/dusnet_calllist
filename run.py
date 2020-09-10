@@ -11,24 +11,34 @@ app = Sanic(__name__)
 jinja = SanicJinja2(app)
 call_list = []
 last_updated = datetime.now()
+session = None
 
 
-@app.route("/calls")
+@app.route("/calls", methods=["POST", "GET"])
 @jinja.template("call_list.jinja2")
 async def calls(request):
-    return {"last_updated": last_updated.strftime('%H:%M'), "calls": call_list}
+    global session, last_updated, call_list
+    if request.method == "POST":
+        print("Is POST")
+        call_list = await get_calls(session)
+        last_updated = datetime.now()
+    return {
+        "last_updated": last_updated.strftime('%H:%M'),
+        "calls": call_list,
+        "disable_reload": "disable_reload" in request.args
+    }
 
 
 async def update_calls():
-    global call_list, last_updated
-    async with aiohttp.ClientSession() as session:
-        await login(session)
-        while True:
-            print("Updating calls...")
-            call_list = await get_calls(session)
-            print("updated calls!")
-            last_updated = datetime.now()
-            await asyncio.sleep(60)
+    global call_list, last_updated, session
+    session = aiohttp.ClientSession()
+    await login(session)
+    while True:
+        print("Updating calls...")
+        call_list = await get_calls(session)
+        print("updated calls!")
+        last_updated = datetime.now()
+        await asyncio.sleep(600)
 
 
 def main():
