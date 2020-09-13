@@ -19,10 +19,8 @@ session = None
 
 
 def group_calls(calls):
-    ret = []
-    for k, g in groupby(calls, key=lambda x: x.date.date()):
-        ret.append((k, [*g]))
-    return sorted(ret, reverse=True, key=lambda x: x[0])
+    grouped = [ (k, [*g]) for k, g in groupby(calls, key=lambda x: x.date.date()) ]
+    return sorted(grouped, reverse=True, key=lambda x: x[0])
 
 
 @app.route("/calls", methods=["POST", "GET"])
