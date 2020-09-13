@@ -1,8 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from config import PASS, SECONDS_WITHIN_DUPLICATE_CALLS, USER
 from lxml import html
-
-from config import PASS, USER
 
 LOGIN_URL = "https://www.dus.net/de/"
 CALLER_LIST = "https://www.dus.net/de/kundenmenue/kundencenter/callerlist.html"
@@ -19,6 +18,17 @@ class Call:
     @classmethod
     def create(cls, kind, date_string, number, duration=None):
         return cls(kind, datetime.strptime(date_string.strip(), "%d.%m.%Y %H:%M:%S"), number, duration)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return  self.kind == other.kind and \
+                self.duration == other.duration and \
+                self.number == other.number and \
+                abs(self.date - other.date) < timedelta(seconds=SECONDS_WITHIN_DUPLICATE_CALLS)
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 async def login(session):
@@ -52,4 +62,7 @@ async def get_calls(session):
         for i in parsed.xpath("//div[text()='angenommene Anrufe']/following-sibling::table/tr[position()>1]"):
             datum, nummer, dauer = i.xpath("td/text()")
             calls.append(Call.create('eingehend', datum, nummer, dauer))
-    return sorted(calls, reverse=True, key=lambda x: x.date)
+    calls = sorted(calls, reverse=True, key=lambda x: x.date)
+    # dus.net often shows the same call multiple times
+    calls = [ first for first, second in zip(calls, calls[1:] + [ None ]) if first != second ]
+    return calls

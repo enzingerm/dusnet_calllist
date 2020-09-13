@@ -2,12 +2,13 @@ import asyncio
 from datetime import date, datetime, timedelta
 from itertools import groupby
 
-import aiohttp
-
-from call_list import get_calls, login
-from filters import filter_day, filter_time
 from sanic import Sanic, response
 from sanic_jinja2 import SanicJinja2
+
+import aiohttp
+from call_list import get_calls, login
+from config import UPDATE_INTERVAL_SECONDS
+from filters import filter_day, filter_time
 
 app = Sanic(__name__)
 jinja = SanicJinja2(app)
@@ -45,9 +46,9 @@ async def update_calls():
     while True:
         print("Updating calls...")
         call_list = group_calls(await get_calls(session))
-        print("updated calls!")
+        print("Updated calls!")
         last_updated = datetime.now()
-        await asyncio.sleep(600)
+        await asyncio.sleep(UPDATE_INTERVAL_SECONDS)
 
 
 def main():
