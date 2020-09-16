@@ -40,10 +40,12 @@ async def calls(request):
 
 
 async def update_calls():
-    global call_list, last_updated, session
-    session = aiohttp.ClientSession()
-    await login(session)
+    global call_list, last_updated, session, session_created_at
     while True:
+        if (session_created_at or datetime.min) + timedelta(days=1) < datetime.now():
+            session = aiohttp.ClientSession()
+            await login(session)
+            session_created_at = datetime.now()
         print("Updating calls...")
         call_list = group_calls(await get_calls(session))
         print("Updated calls!")
