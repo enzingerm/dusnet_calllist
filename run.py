@@ -17,6 +17,7 @@ jinja.add_env("time", filter_time, "filters")
 call_list = []
 last_updated = datetime.now()
 session = None
+session_created_at = None
 
 
 def group_calls(calls):
