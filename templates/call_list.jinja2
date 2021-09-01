@@ -7,10 +7,19 @@
             "width=device-width, user-scalable=no" /> 
     {% if not disable_reload %}
     <script type="text/javascript">
-        setTimeout("window.location.href = window.location.href;", 10000);
+        setTimeout("window.location.href = window.location.href;", 60000);
     </script>
     {% endif %}
     <style type="text/css">
+        @media screen and (min-width: 15cm) {
+            body {
+                font-size: 1.2em;
+            }
+        }
+        body {
+            margin: 0px;
+        }
+
         table {
             width:100%;
             font-family: sans-serif;
@@ -18,9 +27,32 @@
         thead  {
             background-color: salmon;
         }
+        thead > tr.hdr {
+            text-align: left;
+        }
         tr.call > td {
             font-color: gray;
             font-size: 1em;
+        }
+        tr.call > td:not(:last-of-type):not(:first-of-type) {
+            border-right: 1px solid lightgrey;
+        }
+
+        tr.call > td.name {
+            width: 50%;
+        }
+        tr.call > td.name input {
+            font-size:1em;
+            padding:1px;
+            border:none;
+            margin:0px;
+            width: 100%;
+        }
+        tr.call > td.number {
+            font-size:0.8em;
+        }
+        tr.call > td.duration {
+            font-size:0.8em;
         }
         tr.call.verpasst {
             color: FireBrick;
@@ -51,13 +83,14 @@
     <table cellspacing=0 cellpadding=2>
         <thead>
             <tr>
-                <th colspan=2><h2>Anrufliste</h2></th>
+                <th colspan=3><h2>Anrufliste</h2></th>
                 <th>aktualisiert: {{ last_updated }}</th>
                 <th><form method="POST"><button type="submit">Neu laden</button></form></th>
             </tr>
-            <tr>
+            <tr class="hdr">
                 <th></th>
-                <th>Uhrzeit</th>
+                <th>Zeit</th>
+                <th>Name</th>
                 <th>Rufnummer</th>
                 <th>Dauer</th>
             </tr>
@@ -65,14 +98,22 @@
         <tbody>
             {% for day, day_calls in calls %}
                 <tr class="dayhead">
-                    <td colspan=4>{{ day|day }}</td>
+                    <td colspan=5>{{ day|day }}</td>
                 </tr>
                 {% for call in day_calls %}
                 <tr class="call {% if call.duration is none %}verpasst{% else %}{{ call.kind }}{% endif %}">
                     <td title="{% if call.duration is none %}verpasst{% else %}{{ call.kind }}{% endif %}"></td>
                     <td>{{ call.date|time }}</td>
-                    <td>{{ call.number }}</td>
-                    <td>{{ call.duration or '' }}</td>
+                    <td class="name">
+                        <form action="set_name" method="POST">
+                            <input type="hidden" name="number" value="{{ call.number }}" />
+                            <input name="name" type="text" value="{% if call.name is not none %}{{ call.name }}{% endif %}" onfocusout="javascript:this.parentElement.submit()" />
+                        </form>
+                    </td>
+                    <td class="number">
+                        {{ call.number }}
+                    </td>
+                    <td class="duration">{{ call.duration or '' }}</td>
                 </tr>
                 {% endfor %}
             {% endfor %}

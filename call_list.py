@@ -14,10 +14,11 @@ class Call:
         self.date = date
         self.number = number
         self.duration = duration
+        self.name = None
 
     @classmethod
     def create(cls, kind, date_string, number, duration=None):
-        return cls(kind, datetime.strptime(date_string.strip(), "%d.%m.%Y %H:%M:%S"), number, duration)
+        return cls(kind, datetime.strptime(date_string.strip(), "%d.%m.%Y %H:%M:%S"), number.strip(), duration)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
