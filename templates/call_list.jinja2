@@ -105,7 +105,7 @@
                     <td title="{% if call.duration is none %}verpasst{% else %}{{ call.kind }}{% endif %}"></td>
                     <td>{{ call.date|time }}</td>
                     <td class="name">
-                        <form action="set_name" method="POST">
+                        <form action="set_name{{ query_string}}" method="POST">
                             <input type="hidden" name="number" value="{{ call.number }}" />
                             <input name="name" type="text" value="{% if call.name is not none %}{{ call.name }}{% endif %}" onfocusout="javascript:this.parentElement.submit()" />
                         </form>

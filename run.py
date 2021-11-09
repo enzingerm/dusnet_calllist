@@ -11,7 +11,7 @@ from call_list import get_calls, login
 from config import UPDATE_INTERVAL_SECONDS
 from filters import filter_day, filter_time
 
-app = Sanic(__name__)
+app = Sanic(__name__, strict_slashes=True)
 jinja = SanicJinja2(app)
 jinja.add_env("day", filter_day, "filters")
 jinja.add_env("time", filter_time, "filters")
@@ -40,6 +40,8 @@ def add_names(call_list):
 
     return call_list
 
+def get_query_string(request):
+    return f"?{request.query_string}" if len(request.query_string) > 0 else ""
 
 
 @app.route("/calls", methods=["POST", "GET"])
@@ -53,7 +55,8 @@ async def calls(request):
     return {
         "last_updated": last_updated.strftime('%H:%M'),
         "calls": add_names(call_list),
-        "disable_reload": "disable_reload" in request.args
+        "disable_reload": "disable_reload" in request.args,
+        "query_string": get_query_string(request)
     }
 
 @app.route("/set_name", methods=["POST"])
@@ -69,7 +72,7 @@ async def set_name(request):
     with open("phonebook.json", "w+") as f:
         f.write(json.dumps(phonebook))
 
-    return response.redirect("/calls")
+    return response.redirect("/calls" + get_query_string(request))
 
 
 
