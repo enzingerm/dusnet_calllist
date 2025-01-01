@@ -2,19 +2,22 @@ import asyncio
 from datetime import date, datetime, timedelta
 from itertools import groupby
 import json
+import uvloop
 
 from sanic import Sanic, response
-from sanic_jinja2 import SanicJinja2
+from jinja2 import Environment, PackageLoader
+
 
 import aiohttp
-from call_list import get_calls, login
-from config import UPDATE_INTERVAL_SECONDS
-from filters import filter_day, filter_time
+from .call_list import get_calls, login
+from .config import UPDATE_INTERVAL_SECONDS
+from .filters import filter_day, filter_time
 
-app = Sanic(__name__, strict_slashes=True)
-jinja = SanicJinja2(app)
-jinja.add_env("day", filter_day, "filters")
-jinja.add_env("time", filter_time, "filters")
+env = Environment(loader=PackageLoader('dusnet_calllist', 'templates'))
+env.filters['day'] = filter_day
+env.filters['time'] = filter_time
+
+app = Sanic('dusnet_calllist', strict_slashes=True)
 call_list = []
 last_updated = datetime.now()
 session = None
@@ -45,19 +48,21 @@ def get_query_string(request):
 
 
 @app.route("/calls", methods=["POST", "GET"])
-@jinja.template("call_list.jinja2")
 async def calls(request):
     global session, last_updated, call_list
     if request.method == "POST":
         print("Is POST")
         call_list = group_calls(await get_calls(session))
         last_updated = datetime.now()
-    return {
+    data = {
         "last_updated": last_updated.strftime('%H:%M'),
         "calls": add_names(call_list),
         "disable_reload": "disable_reload" in request.args,
         "query_string": get_query_string(request)
     }
+    template = env.get_template('call_list.jinja2')
+    return response.html(template.render(**data))
+
 
 @app.route("/set_name", methods=["POST"])
 async def set_name(request):
@@ -93,17 +98,17 @@ async def update_calls():
             print(e)
 
 
-def main():
-    loop = asyncio.get_event_loop()
-    server = app.create_server(
+async def main():
+    server = await app.create_server(
         host='127.0.0.1',
         port=8000,
         return_asyncio_server=True
     )
-    loop.create_task(server)
-    loop.create_task(update_calls())
-    loop.run_forever()
+    await server.startup()
+    asyncio.create_task(update_calls())
+    await server.serve_forever()
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.set_event_loop(uvloop.new_event_loop())
+    asyncio.run(main())

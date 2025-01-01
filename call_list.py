@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from config import PASS, SECONDS_WITHIN_DUPLICATE_CALLS, USER
+from .config import PASS, SECONDS_WITHIN_DUPLICATE_CALLS, USER
 from lxml import html
 
 LOGIN_URL = "https://my.dus.net/de/"
